@@ -317,8 +317,11 @@ server <- function(input, output) {
     str1 = paste0("When H<sub>obs,i</sub> = 0 & p > 0 & q > 0 then F = 1")
     str2 = paste0("When H<sub>obs,i</sub> = N<sub>i</sub> then F = -1")
     str3 = paste0("When H<sub>obs,i</sub> = H<sub>exp,i</sub> then F = 0")
-    str4 = "</br>"
-    HTML(paste(str1,str2,str3,str4,sep = "</br>"))
+    str4 = paste0("positive F means fewer heterozygotes than expected; indicates inbreeding")
+    str5 = paste0("negative F means more heterozygotes than expected; indicates outbreeding")
+    str6 = paste0("F = 0 means the population is consistent with HWE")
+    str7 = "</br>"
+    HTML(paste(str1,str4,str2,str5,str3,str6,str7,sep = "</br>"))
   })
   
   output$het_freq_formula = renderUI({
