@@ -2,14 +2,12 @@ library(shiny)
 library(ggplot2)
 
 ui <- fluidPage(
-  # Application title
-  headerPanel("F-statistics made EASY!"),
-
+  #sidebarLayout
   sidebarLayout(
     sidebarPanel(style = "position:fixed;width:30%;",
       fluidRow(align = 'center',
-               helpText("Choose the number of populations for analysis."),
-               numericInput("num_pops", "number of populations", value = 3, min = 2, max = 10, width = '30%')
+               helpText("Choose the number of populations (min=2, max=6) and the size of each population (min=10, max=10,000) for anaylsis"),
+               numericInput("num_pops", "number of populations", value = 3, min = 2, max = 6, width = '30%')
       ),
       fluidRow(align = 'center',
                htmlOutput("pop_slider_setup")
@@ -17,6 +15,11 @@ ui <- fluidPage(
     ),#end of sidebarPanel
     
     mainPanel(width = 8,
+      h2("F-statistics made EASY!"),
+      #create info section
+      fluidRow(align = 'justify',
+               htmlOutput("fstats_notes"),
+      ), 
       #observed genotype counts table
       h3("observed genotype counts", align = 'center'),
       fluidRow(align = 'center',
@@ -50,7 +53,11 @@ ui <- fluidPage(
       ),#end of step 2
       
       #Step 3: Calculate observed and expected heterozygote frequencies and inbreeding coefficients
-      h3("Step 3: Calculate observed and expected heterozygote frequencies and inbreeding coefficients", align = 'center'),
+      h3("Step 3: Calculate observed and expected heterozygote frequencies and local inbreeding coefficients", align = 'center'),
+      htmlOutput("step3_notes", align = 'center'),
+      tags$head(tags$style("#step3_notes{font-size: 15px;
+                                         }"
+      )),
       fluidRow(column(width = 6, align = 'right',
                       tableOutput("het_freq_table")
       ),
@@ -142,6 +149,23 @@ ui <- fluidPage(
 
 # Define server logic required
 server <- function(input, output) {
+  
+  #fstat_notes
+  output$fstats_notes = renderUI({
+    str1 = "One of the results of population structure is a reduction in heterozygosity. When populations split, alleles have a higher chance of reaching fixation within subpopulations, especially if the subpopulations are small or have been isolated for long periods. This reduction in heterozygosity can be thought of as an extension of inbreeding, with individuals in subpopulations being more likely to share a recent common ancestor. F-Statistics use inbreeding coefficients to describe the partitioning of genetic variation within and among populations and can be calculated at three different levels. The first F-statistic, FIS, measures the degree of inbreeding within individuals relative to the rest of their subpopulation. This reflects the probability that two alleles within the same individual are identical by descent, and is the same as the inbreeding coefficient F. It is calculated as:"
+    str4 = "FIS = HS - HI / HS"
+    str5 = "HI is the observed heterozygosity in a subpopulation at the time of investigation (individual heterozygosity) and HS is the heterozygosity that would be expected if the subpopulation was in HWE (subpopulation heterozygosity)."
+    str6 = "The second F-statistic is FST (also known as the fixation index), and this provides an estimate of the genetic differentiation between subpopulations. It is a measure of the degree of inbreeding within a subpopulation relative to the total population (total population here meaning all of the subpopulations combined), and reflects the probability that two alleles drawn at random from within a subpopulation are identical by descent. It is calculated as:"
+    str7 = "FST = HT - HS / HT"
+    str8 = "where HS is the same as above and HT is the expected heterozygosity of the total population."
+    str9 = "The third F-statistic, which is used much less frequently than the other two, is FIT. This provides an overall inbreeding coefficient for an individual by measuring the heterozygosity of an individual relative to the total population. FIT is therefore influenced by both non-random mating within a subpopulation (FIS) and population subdivision (FST), and is calculated as:"
+    str10 = "FIT = HT - HI / HT"
+    str11 = "where HT and HI are the same as above. The relationship between the three statistics is given as:"
+    str12 = "FIT = FIS + FST — (FIS)(FST)"
+    str13 = "Since FST measures the extent to which populations have differentiated from one another, this is the F-statistic with which we are most concerned."
+    brk = "<br/>"
+    HTML(paste(str1,brk,str4,brk,str5,str6,brk,str7,brk,str8,str9,brk,str10,brk,str11,brk,str12,brk,str13, sep = "<br/>"))
+  })
 
   #create output panels for each population
   output$pop_slider_setup = renderUI({
@@ -149,7 +173,7 @@ server <- function(input, output) {
     #create a list to store inputs for population size (numericInput) and initial genotype values (uiOutput).
     for(i in 1:input$num_pops){
       col_list[[i]] = column(width = 4, align = 'center',
-                             numericInput(paste0("max",i), paste0("pop",i," size"), value = 100, min = 10, max = 2000, width = '100%'),
+                             numericInput(paste0("max",i), paste0("pop",i," size"), value = 100, min = 10, max = 10000, width = '100%'),
                              wellPanel(
                                uiOutput(paste0("slider1",i)),
                                uiOutput(paste0("slider2",i))
@@ -219,7 +243,7 @@ server <- function(input, output) {
   #Step 1.  Calculate the allele frequencies for each population:
   output$allele_freq_formula = renderUI({
     str1 = paste0("<b><i>p</i><sub>1</sub></b> = (2 x Obs<sub>AA</sub> + Obs<sub>Aa</sub>) / (2 x N)")
-    str2 = paste0("<font color=\"#FF0000\"><b>",sprintf(fmt = '%#.3f',(2*input$slider11+input$slider21)/(2*input$max1)),"</b></font>"," = (2 x ","<font color=\"#FF0000\">",input$slider11, "</font>"," + ","<font color=\"#FF0000\">",input$slider21, "</font>",") / (2 x ","<font color=\"#FF000\">", input$max1,"</font>)" )
+    str2 = paste0("<font color=\"#FF0000\"><b>",sprintf(fmt = '%#.3f',(2*input$slider11+input$slider21)/(2*input$max1)),"</b>"," = (2 x ",input$slider11," + ",input$slider21,") / (2 x ", input$max1,"</font>)" )
     str3 = "</br>"
     HTML(paste(str1, str2, str3, sep = '</br>'))
   })
@@ -253,13 +277,13 @@ server <- function(input, output) {
     p = (2*input$slider11+input$slider21)/(2*input$max1)
     q = 1-p
     str1 = paste0("<b>Exp<sub>AA,1</sub></b> = N x <i>p</i><sup>2</sup>")
-    str2 = paste0("<font color=\"#FF0000\"><b>",sprintf(fmt = '%#.3f',input$max1*p^2),"</font></b>"," = ", "<font color=\"#FF0000\">",input$max1,"</font>"," x ", "<font color=\"#FF0000\">", sprintf(fmt = '%#.3f',p), "</font>", "<sup>","2","</sup>")
+    str2 = paste0("<font color=\"#FF0000\"><b>",sprintf(fmt = '%#.3f',input$max1*p^2),"</b>  = ",input$max1," x ", sprintf(fmt = '%#.3f',p), "<sup>","2","</sup></font>")
   
     str3 = paste0("<b>Exp<sub>Aa,1</sub></b> = N x 2<i>p</i><i>q</i>")
-    str4 = paste0("<font color=\"#FF0000\"><b>",sprintf(fmt = '%#.3f',input$max1*2*p*q),"</font></b>"," = ","<font color=\"#FF0000\">",input$max1,"</font>"," x 2 (","<font color=\"#FF0000\">",sprintf(fmt = '%#.3f',p),"</font>",")(","<font color=\"#FF0000\">",sprintf(fmt = '%#.3f',q),"</font>",")")
+    str4 = paste0("<font color=\"#FF0000\"><b>",sprintf(fmt = '%#.3f',input$max1*2*p*q),"</b>"," = ",input$max1," x 2(",sprintf(fmt = '%#.3f',p),")(",sprintf(fmt = '%#.3f',q),")","</font>")
     
     str5 = paste0("<b>Exp<sub>aa,1</sub></b> = N x <i>q</i><sup>2</sup>")
-    str6 = paste0("<font color=\"#FF0000\"><b>",sprintf(fmt = '%#.3f',input$max1*q^2),"</font></b>"," = ", "<font color=\"#FF0000\">",input$max1,"</font>"," x ", "<font color=\"#FF0000\">", sprintf(fmt = '%#.3f',q), "</font>", "<sup>","2","</sup>")
+    str6 = paste0("<font color=\"#FF0000\"><b>",sprintf(fmt = '%#.3f',input$max1*q^2),"</b>  = ",input$max1," x ", sprintf(fmt = '%#.3f',q), "<sup>","2","</sup></font>")
     
     HTML(paste(str1, str2, str3, str4, str5, str6, sep = '</br>'))
   })
@@ -289,19 +313,27 @@ server <- function(input, output) {
   #het_exp = 0 when one of the alleles is fixed. 
   #F = (het_exp - het_obs) / het_exp
   
+  output$step3_notes = renderUI({
+    str1 = paste0("When H<sub>obs,i</sub> = 0 & p > 0 & q > 0 then F = 1")
+    str2 = paste0("When H<sub>obs,i</sub> = N<sub>i</sub> then F = -1")
+    str3 = paste0("When H<sub>obs,i</sub> = H<sub>exp,i</sub> then F = 0")
+    str4 = "</br>"
+    HTML(paste(str1,str2,str3,str4,sep = "</br>"))
+  })
+  
   output$het_freq_formula = renderUI({
     p = (2*input$slider11+input$slider21)/(2*input$max1)
     q = 1-p
     hobs = input$slider21/input$max1
     hexp = 2*p*q
     str1 = paste0("<b><i>H</i><sub>obs,1</sub></b> = Obs<sub>Aa</sub> / N")
-    str2 = paste0("<font color=\"#FF0000\"><b>", sprintf(fmt = '%#.3f',input$slider21/input$max1),"</font></b>", " = ","<font color=\"#FF0000\">", input$slider21, "</font>"," / ", "<font color=\"#FF0000\">",input$max1,"</font>")
+    str2 = paste0("<font color=\"#FF0000\"><b>", sprintf(fmt = '%#.3f',input$slider21/input$max1),"</b> = ", input$slider21," / ", input$max1,"</font>")
     
     str3 = paste0("<b><i>H</i><sub>exp,1</sub></b> = 2<i>pq</i>")
-    str4 = paste0("<font color=\"#FF0000\"><b>", sprintf(fmt = '%#.3f',2*p*q),"</font></b>", " = 2(","<font color=\"#FF0000\">", sprintf(fmt = '%#.3f',p), "</font>",")(", "<font color=\"#FF0000\">",sprintf(fmt = '%#.3f',q),"</font>",")")
+    str4 = paste0("<font color=\"#FF0000\"><b>", sprintf(fmt = '%#.3f',2*p*q),"</b> = 2(", sprintf(fmt = '%#.3f',p), ")(",sprintf(fmt = '%#.3f',q),")","</font>")
     
-    str5 = paste0("<b>F<sub>1</sub></b> = <i>H</i><sub>exp,1</sub> - <i>H</i><sub>obs,1</sub> / <i>H</i><sub>exp,1</sub>")
-    str6 = paste0("<font color=\"#FF0000\"><b>",sprintf(fmt = '%#.3f',(hexp - hobs) / hexp),"</font></b>", " = ","<font color=\"#FF0000\">", sprintf(fmt = '%#.3f',hexp),"</font>", " - ","<font color=\"#FF0000\">", sprintf(fmt = '%#.3f',hobs),"</font>", " / ","<font color=\"#FF0000\">", sprintf(fmt = '%#.3f',hexp), "</font>")
+    str5 = paste0("<b><i>F</i><sub>1</sub></b> = <i>H</i><sub>exp,1</sub> - <i>H</i><sub>obs,1</sub> / <i>H</i><sub>exp,1</sub>")
+    str6 = paste0("<font color=\"#FF0000\"><b>",sprintf(fmt = '%#.3f',(hexp - hobs) / hexp),"</b> = ", sprintf(fmt = '%#.3f',hexp)," - ", sprintf(fmt = '%#.3f',hobs)," / ",sprintf(fmt = '%#.3f',hexp), "</font>")
     HTML(paste(str1, str2, str3, str4, str5, str6, sep = '</br>'))
     
   })
