@@ -88,35 +88,35 @@ ui <- fluidPage(
                       )
       ),#end of step 4
       
-      #Step 5: Calculate the global heterozygote indicies
-      h3("Step 5: Calculate the global heterozygote indicies", align = 'center'),
+      #Step 5: Calculate the global heterozygote indices
+      h3("Step 5: Calculate the global heterozygote indices", align = 'center'),
       fluidRow(column(width = 6, align = 'right',
                       
-                      tableOutput("global_het_indicies_table")
+                      tableOutput("global_het_indices_table")
                       ),
                column(width = 6, align = 'left',
-                      htmlOutput("global_het_indicies_formula_HI_1"),
-                      tags$head(tags$style("#global_het_indicies_formula_HI_1{font-size: 15px;
+                      htmlOutput("global_het_indices_formula_HI_1"),
+                      tags$head(tags$style("#global_het_indices_formula_HI_1{font-size: 15px;
                                          }"
                       )),
-                      htmlOutput("global_het_indicies_formula_HI_2"),
-                      tags$head(tags$style("#global_het_indicies_formula_HI_2{font-size: 15px;
+                      htmlOutput("global_het_indices_formula_HI_2"),
+                      tags$head(tags$style("#global_het_indices_formula_HI_2{font-size: 15px;
                                          }"
                       )),
-                      htmlOutput("global_het_indicies_formula_HS_1"),
-                      tags$head(tags$style("#global_het_indicies_formula_HS_1{font-size: 15px;
+                      htmlOutput("global_het_indices_formula_HS_1"),
+                      tags$head(tags$style("#global_het_indices_formula_HS_1{font-size: 15px;
                                          }"
                       )),
-                      htmlOutput("global_het_indicies_formula_HS_2"),
-                      tags$head(tags$style("#global_het_indicies_formula_HS_2{font-size: 15px;
+                      htmlOutput("global_het_indices_formula_HS_2"),
+                      tags$head(tags$style("#global_het_indices_formula_HS_2{font-size: 15px;
                                          }"
                       )),
-                      htmlOutput("global_het_indicies_formula_HT_1"),
-                      tags$head(tags$style("#global_het_indicies_formula_HT_1{font-size: 15px;
+                      htmlOutput("global_het_indices_formula_HT_1"),
+                      tags$head(tags$style("#global_het_indices_formula_HT_1{font-size: 15px;
                                          }"
                       )),
-                      htmlOutput("global_het_indicies_formula_HT_2"),
-                      tags$head(tags$style("#global_het_indicies_formula_HT_2{font-size: 15px;
+                      htmlOutput("global_het_indices_formula_HT_2"),
+                      tags$head(tags$style("#global_het_indices_formula_HT_2{font-size: 15px;
                                          }"
                       ))
                       )
@@ -125,8 +125,8 @@ ui <- fluidPage(
       #h4("Step 4 & 5 notes: You need to multiple by the size of the population (N) to account for differences in population sizes. Hi is based on observed heterozygosities in individuals in subpopulations. Hs is based on expected heterozygosities in subpopulations. Ht is based on expected heterozygosities for overall total population", align = 'center'),
       #end of step 5
       
-      #Step 6: Calculate the global fixation indicies
-      h3("Step 6: Calculate the global fixation indicies", align = 'center'),
+      #Step 6: Calculate the global fixation indices
+      h3("Step 6: Calculate the global fixation indices", align = 'center'),
       fluidRow(column(width = 6, align = 'right',
                       tableOutput("global_fstats_table")
                       ),
@@ -438,7 +438,7 @@ server <- function(input, output) {
   #Ht = 2*pbar*(1-pbar)
   
   #HI formula 1
-  output$global_het_indicies_formula_HI_1 = renderUI({
+  output$global_het_indices_formula_HI_1 = renderUI({
       num_formula1 = c()
       den_formula1 = c()
       for(i in 1:input$num_pops){
@@ -455,7 +455,7 @@ server <- function(input, output) {
   })
   
   #HI formula 2
-  output$global_het_indicies_formula_HI_2 = renderUI({
+  output$global_het_indices_formula_HI_2 = renderUI({
     myvals_obs = c()
     myvals_n = c()
     for(i in 1:input$num_pops){
@@ -486,7 +486,7 @@ server <- function(input, output) {
   
   
   #HS formula 1
-  output$global_het_indicies_formula_HS_1 = renderUI({
+  output$global_het_indices_formula_HS_1 = renderUI({
     num_formula1 = c()
     den_formula1 = c()
     for(i in 1:input$num_pops){
@@ -503,7 +503,7 @@ server <- function(input, output) {
   })
   
   #HS formula 2
-  output$global_het_indicies_formula_HS_2 = renderUI({
+  output$global_het_indices_formula_HS_2 = renderUI({
     myvals_obs = c()
     myvals_exp = c()
     myvals_n = c()
@@ -533,13 +533,13 @@ server <- function(input, output) {
   })
   
   #HT formula 1
-  output$global_het_indicies_formula_HT_1 = renderUI({
+  output$global_het_indices_formula_HT_1 = renderUI({
     formula1 = c(paste0("<b><i>H</i><sub>T</sub></b>"," = 2 x pbar x qbar"))
     #construct string outputs
     HTML(paste(formula1))
   })
   #HT formula 1
-  output$global_het_indicies_formula_HT_2 = renderUI({
+  output$global_het_indices_formula_HT_2 = renderUI({
     num = c()
     den = c()
     for(i in 1:input$num_pops){
@@ -558,7 +558,7 @@ server <- function(input, output) {
   })
   
   #heterozgosity index table
-  output$global_het_indicies_table = renderTable({
+  output$global_het_indices_table = renderTable({
     m = matrix(nrow = 3, ncol = 1)
     myvals_obs = c()
     myvals_exp = c()
@@ -584,7 +584,7 @@ server <- function(input, output) {
     d = data.frame(heterozygosity_index = c("Hi", "Hs", "Ht"))
     df = cbind(d,m)
     df
-  })#end of global het indicies table
+  })#end of global het indices table
   
   #Step 6.  CALCULATE THE GLOBAL  F-STATISTICS:
   # Compare and contrast the global Fis below with the local inbreeding coefficient Fs of Step 5.
